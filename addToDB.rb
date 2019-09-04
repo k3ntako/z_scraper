@@ -29,7 +29,6 @@ class ParseFileToDB < LocationParser
   end
 
   def iterate_through_folders
-    puts "iterate_through_folders"
     folders = Dir["./scraped/*/"]
 
     folders.each do |folder_path|
@@ -41,7 +40,6 @@ class ParseFileToDB < LocationParser
   end
 
   def iterate_through_files(folder_path)
-    puts "iterate_through_files"
     file_paths = Dir["#{folder_path}*.json"]
     file_paths.each do |file_path|
       parse_location( file_path )
@@ -49,17 +47,19 @@ class ParseFileToDB < LocationParser
   end
 
   def parse_location( file_path )
-    puts "parse_location"
     str = File.read(file_path)
     hash = JSON.parse(str)
     hash["locations"].each do |location_hash|
-      address = location_hash["addressLines"].join(" ")
-      existing_location = Location.where("name = ? OR address = ?", location_hash["name"], address)
+      address_hash = location_hash["address"]
+      query_string = "address->>'address_part_1' = ? AND address->>'zipcode' = ? AND address->>'country' = ?"
+      existing_location = Location.where(
+        query_string,
+        address_hash["streetAddressLine1"],
+        address_hash["postalCode"],
+        address_hash["countryCode"],
+      )
 
       next if existing_location.length > 0
-
-      puts "-----"
-      puts location_hash.inspect
 
       new_location = Location.new
 
@@ -68,7 +68,15 @@ class ParseFileToDB < LocationParser
       new_location.name = location_hash["name"]
       new_location.lat = location_hash["coordinates"]["latitude"]
       new_location.lng = location_hash["coordinates"]["longitude"]
-      new_location.address = address
+      new_location.address = {
+        address_part_1: address_hash["streetAddressLine1"],
+        address_part_2: address_hash["streetAddressLine2"],
+        address_part_3: address_hash["streetAddressLine3"],
+        city: address_hash["city"],
+        state: address_hash["countrySubdivisionCode"],
+        zipcode: address_hash["postalCode"].to_s[0..4], #first five characters
+        country: address_hash["countryCode"],
+      }
 
       business_hours = {}
       today_tomorrow = self.day_of_week( file_path )
@@ -92,10 +100,7 @@ class ParseFileToDB < LocationParser
       end
       new_location.business_hours = business_hours
 
-      puts new_location.inspect
       new_location.save!
-      # puts location_hash["features"]
-      # puts location_hash["slug"]
     end
     File.write("./scraped/ran.txt", @current_folder_name, mode: "a")
   end

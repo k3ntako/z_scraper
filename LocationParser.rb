@@ -1,6 +1,5 @@
 class LocationParser
   def day_of_week( file_path )
-    puts "day_of_week"
     tomorrow = {
       "Sunday" => "Monday",
       "Monday" => "Tuesday",
@@ -16,7 +15,6 @@ class LocationParser
   end
 
   def get_business_hour( open_close_times )
-    puts "get_business_hour"
     open_close_times_arr = open_close_times.split("to")
     open_time = self.parse_time open_close_times_arr[0]
     close_time = self.parse_time open_close_times_arr[1]
@@ -37,7 +35,6 @@ class LocationParser
   end
 
   def parse_time( timeStr )
-    puts "parse_time"
     timeString = timeStr.strip
     timeArr = timeString.split(" ")
     hour_and_min = timeArr[0].split(":")
