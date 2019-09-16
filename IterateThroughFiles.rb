@@ -46,7 +46,13 @@ class IterateThroughFiles < CreateNewLocation
         address_hash["countryCode"],
       )
 
-      next if existing_location.length > 0
+
+      if existing_location.length > 0
+        puts "skipped #{location_hash["storeNumber"]}"
+        next
+      end
+
+      puts location_hash["storeNumber"]
 
       new_location_params = self.create_new_location(file_path, location_hash, @chain_id)
       next if !new_location_params

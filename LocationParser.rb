@@ -30,6 +30,7 @@ class LocationParser
     new_bh = BusinessHour.new
     new_bh.open_time = open_time
     new_bh.close_time = close_time
+    new_bh.is_open = true
     new_bh.save!
     new_bh.id
   end

@@ -1,2 +1,4 @@
 /scraped
 .DS_Store
+/csv
+config.rb

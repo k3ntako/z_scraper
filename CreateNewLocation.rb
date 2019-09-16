@@ -1,3 +1,4 @@
+require 'json'
 require_relative './LocationParser'
 
 class CreateNewLocation < LocationParser
@@ -24,9 +25,9 @@ class CreateNewLocation < LocationParser
 
     return nil if !location_hash["schedule"]
     location_hash["schedule"].each do | day_hash |
+      dayName = day_hash["dayName"].strip.capitalize
 
-      if day_hash["open"]
-        dayName = day_hash["dayName"].strip.capitalize
+      if day_hash["open"] === true
         if dayName == "Today"
           dayName = today_tomorrow[0]
         elsif dayName == "Tomorrow"
@@ -35,11 +36,17 @@ class CreateNewLocation < LocationParser
 
         bh_id = self.get_business_hour( day_hash["hours"] )
         business_hours[dayName] = bh_id
+      elsif day_hash["open"] === false
+        business_hours[dayName] = {
+          "open_time" => nil,
+          "close_time" => nil,
+          "is_open" => false,
+        }
       else
         business_hours[dayName] = nil
       end
     end
-    new_location["business_hours"] = business_hours
+    new_location["business_hours"] = business_hours.to_json
 
     return new_location
   end
